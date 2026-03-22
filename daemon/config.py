@@ -14,6 +14,9 @@ class Config:
     llm_model: str = "niambay2"
     llm_url: str = "http://localhost:11434"
     llm_api_key: str = ""
+    groq_api_key: str = ""
+    gemini_api_key: str = ""
+    use_cascade: bool = True
     max_memory_mb: int = 50
     max_brain_nodes: int = 10000
     observe_windows: bool = True

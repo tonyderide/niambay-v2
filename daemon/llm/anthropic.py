@@ -11,6 +11,7 @@ from .base import LLMMessage, LLMResponse, LLMProvider
 
 class AnthropicProvider(LLMProvider):
     """Talks to the Anthropic Messages API."""
+    name = "anthropic"
 
     API_URL = "https://api.anthropic.com/v1/messages"
     API_VERSION = "2023-06-01"

@@ -12,7 +12,7 @@ from pathlib import Path
 from daemon.config import Config
 from daemon.collectors import WindowCollector, ProcessCollector, GitCollector
 from daemon.collectors.base import CollectorEvent
-from daemon.llm import create_provider
+from daemon.llm import create_provider, create_cascade
 from daemon.llm.base import LLMMessage
 from daemon.server.http import FrontendServer
 from daemon.server.ws import NiamBayServer
@@ -85,6 +85,13 @@ class NiamBayDaemon:
     def _create_llm_provider(self):
         """Try to create the configured LLM provider; return None on failure."""
         try:
+            # Use cascade by default — tries all available providers in order
+            if self.config.use_cascade:
+                cascade = create_cascade(self.config)
+                if cascade.is_available():
+                    return cascade
+                logger.warning("Cascade has no available providers — falling back to single provider")
+
             provider_name = self.config.llm_provider
             kwargs: dict = {"model": self.config.llm_model}
 
@@ -96,6 +103,10 @@ class NiamBayDaemon:
                     logger.warning("No Anthropic API key — LLM disabled")
                     return None
                 kwargs["api_key"] = api_key
+            elif provider_name == "groq":
+                kwargs["api_key"] = self.config.groq_api_key
+            elif provider_name == "google":
+                kwargs["api_key"] = self.config.gemini_api_key
             else:
                 kwargs["url"] = self.config.llm_url  # fallback
 
@@ -307,7 +318,7 @@ class NiamBayDaemon:
         self.config.save(str(config_path))
 
         # Apply live changes: LLM provider
-        if any(k in data for k in ("llm_provider", "llm_model", "llm_url", "llm_api_key")):
+        if any(k in data for k in ("llm_provider", "llm_model", "llm_url", "llm_api_key", "groq_api_key", "gemini_api_key", "use_cascade")):
             try:
                 self.llm_provider = self._create_llm_provider()
                 logger.info("LLM provider reloaded: %s / %s", self.config.llm_provider, self.config.llm_model)

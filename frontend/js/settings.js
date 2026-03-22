@@ -32,6 +32,9 @@ const Settings = {
         this._setVal('#s-llm-model', config.llm_model || '');
         this._setVal('#s-llm-url', config.llm_url || '');
         this._setVal('#s-llm-api-key', config.llm_api_key || '');
+        this._setVal('#s-groq-api-key', config.groq_api_key || '');
+        this._setVal('#s-gemini-api-key', config.gemini_api_key || '');
+        this._setChecked('#s-use-cascade', config.use_cascade !== false);
 
         // Observation
         this._setChecked('#s-obs-windows', config.observe_windows !== false);
@@ -76,6 +79,9 @@ const Settings = {
             llm_model: this._getVal('#s-llm-model'),
             llm_url: this._getVal('#s-llm-url'),
             llm_api_key: this._getVal('#s-llm-api-key'),
+            groq_api_key: this._getVal('#s-groq-api-key'),
+            gemini_api_key: this._getVal('#s-gemini-api-key'),
+            use_cascade: this._getChecked('#s-use-cascade'),
             observe_windows: this._getChecked('#s-obs-windows'),
             observe_processes: this._getChecked('#s-obs-processes'),
             observe_git: this._getChecked('#s-obs-git'),
@@ -187,6 +193,7 @@ const Settings = {
                         <select id="s-llm-provider">
                             <option value="ollama">Ollama (local)</option>
                             <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="groq">Groq (Llama)</option>
                             <option value="google">Google (Gemini)</option>
                             <option value="openai">OpenAI (GPT)</option>
                         </select>
@@ -197,9 +204,16 @@ const Settings = {
                     <label>API URL (Ollama)
                         <input type="text" id="s-llm-url" placeholder="http://localhost:11434">
                     </label>
-                    <label>API Key (cloud)
+                    <label>API Key (Anthropic)
                         <input type="password" id="s-llm-api-key" placeholder="sk-...">
                     </label>
+                    <label>Groq API Key
+                        <input type="password" id="s-groq-api-key" placeholder="gsk_...">
+                    </label>
+                    <label>Gemini API Key
+                        <input type="password" id="s-gemini-api-key" placeholder="AIza...">
+                    </label>
+                    <label class="settings-toggle"><input type="checkbox" id="s-use-cascade"> Cascade mode (try all providers)</label>
                     <div class="settings-row">
                         <button class="settings-btn" id="s-test-btn">Test LLM</button>
                         <span id="s-test-result" class="settings-test-result"></span>

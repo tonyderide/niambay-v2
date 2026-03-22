@@ -11,6 +11,7 @@ from .base import LLMMessage, LLMResponse, LLMProvider
 
 class OllamaProvider(LLMProvider):
     """Talks to a local Ollama instance."""
+    name = "ollama"
 
     def __init__(self, url: str = "http://localhost:11434", model: str = "llama3"):
         self.url = url.rstrip("/")
