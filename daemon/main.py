@@ -16,6 +16,8 @@ from daemon.llm import create_provider
 from daemon.llm.base import LLMMessage
 from daemon.server.ws import NiamBayServer
 from daemon.tasks.executor import TaskExecutor, Task
+from daemon.brain import Memory, MemoryEvent, HabitTracker
+from daemon.notifications import NotificationManager
 
 logger = logging.getLogger("niambay")
 
@@ -50,6 +52,11 @@ class NiamBayDaemon:
 
         # --- Task executor ---
         self.task_executor = TaskExecutor()
+
+        # --- Brain + Notifications ---
+        self.memory = Memory()
+        self.habits = HabitTracker()
+        self.notifier = NotificationManager()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -100,6 +107,21 @@ class NiamBayDaemon:
                 events.extend(collector.collect())
             except Exception as exc:
                 logger.error("Collector %s failed: %s", getattr(collector, "name", "?"), exc)
+
+        import time as _time
+        for evt in events:
+            # Store in memory
+            self.memory.store(MemoryEvent(source=evt.source, event_type=evt.event_type, data=evt.data))
+            # Record habits
+            if evt.event_type == "app_change":
+                hour = _time.localtime().tm_hour
+                self.habits.record("app_usage", evt.data.get("app", "unknown"), hour=hour)
+            # Auto-notify on alerts
+            if evt.event_type in ("high_cpu", "high_memory", "disk_full"):
+                self.notifier.notify(f"Alerte {evt.event_type}", str(evt.data), level="warning")
+            if evt.event_type == "unpushed_alert":
+                self.notifier.notify("Git non pushé", f"{evt.data.get('repo')}: {evt.data.get('count')} commits", level="info")
+
         return events
 
     # ------------------------------------------------------------------
@@ -118,6 +140,8 @@ class NiamBayDaemon:
             await self._handle_status(websocket)
         elif msg_type == "pause":
             await self._handle_pause(websocket, msg)
+        elif msg_type == "notifications":
+            await self._handle_notifications(websocket)
         else:
             await websocket.send(
                 NiamBayServer.format_event("error", {"message": f"Unknown type: {msg_type}"})
@@ -174,6 +198,15 @@ class NiamBayDaemon:
                 NiamBayServer.format_event("error", {"message": f"Task error: {exc}"})
             )
 
+    async def _handle_notifications(self, websocket):
+        items = [
+            {"title": n.title, "message": n.message, "level": n.level, "id": n.id, "read": n.read}
+            for n in self.notifier.pending()
+        ]
+        await websocket.send(
+            NiamBayServer.format_event("notifications", {"type": "notifications", "items": items})
+        )
+
     async def _handle_status(self, websocket):
         status = {
             "paused": self.paused,
@@ -182,6 +215,9 @@ class NiamBayDaemon:
             "llm_provider": self.config.llm_provider,
             "clients_connected": len(self.server.clients),
             "config": asdict(self.config),
+            "memory_events": len(self.memory._events),
+            "habits_detected": len(self.habits.detect()),
+            "notifications_pending": len(self.notifier.pending()),
         }
         await websocket.send(NiamBayServer.format_event("status", status))
 
