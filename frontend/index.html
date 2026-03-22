@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niam-Bay — ញ៉ាំបាយ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <script src="js/ws.js" defer></script>
+    <script src="js/app.js" defer></script>
+</head>
+<body>
+    <!-- Top bar: stats -->
+    <header id="stats-bar">
+        <span class="stat" id="stat-uptime">Uptime: --</span>
+        <span class="stat" id="stat-events">Events: 0</span>
+        <span class="stat" id="stat-memory">Memory: --</span>
+        <span class="stat" id="stat-llm">LLM: offline</span>
+    </header>
+
+    <!-- Notification area -->
+    <div id="notifications"></div>
+
+    <!-- Main layout -->
+    <main id="app">
+        <!-- Hologram canvas container -->
+        <section id="hologram-container">
+            <canvas id="hologram-canvas"></canvas>
+        </section>
+
+        <!-- Chat panel -->
+        <aside id="chat-panel">
+            <div id="chat-messages"></div>
+            <form id="chat-form">
+                <input type="text" id="chat-input" placeholder="Parle-moi..." autocomplete="off">
+                <button type="submit" id="chat-send">Envoyer</button>
+            </form>
+        </aside>
+    </main>
+</body>
+</html>
