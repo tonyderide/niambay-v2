@@ -81,30 +81,32 @@ body {
 
 #hologram-container {
     flex: 0 0 40%;
+    min-width: 0;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
     transition: flex 0.5s ease;
 }
 
-#hologram-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
+#hologram-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* ── Chat panel ────────────────────────────────────── */
 
 #chat-panel {
-    flex: 1;
+    flex: 0 0 60%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background: var(--panel-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-left: 1px solid var(--panel-border);
-    transition: flex 0.5s ease, width 0.5s ease, opacity 0.5s ease;
+    transition: flex 0.5s ease, opacity 0.5s ease;
 }
 
 /* ── Voice mode ───────────────────────────────────── */
@@ -341,4 +343,243 @@ body {
     #app.voice-mode #hologram-container {
         flex: 1;
     }
+}
+
+/* ── Settings button ─────────────────────────────── */
+
+#settings-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s;
+}
+
+#settings-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Settings overlay & panel ─────────────────────── */
+
+#settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+}
+
+#settings-panel {
+    background: rgba(15, 15, 35, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 80px rgba(79, 195, 247, 0.08);
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+.settings-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.settings-close {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.settings-close:hover {
+    opacity: 1;
+}
+
+.settings-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.settings-section h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+}
+
+.settings-section label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text);
+    opacity: 0.9;
+}
+
+.settings-section input[type="text"],
+.settings-section input[type="password"],
+.settings-section select,
+.settings-section textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.settings-section input[type="text"]:focus,
+.settings-section input[type="password"]:focus,
+.settings-section select:focus,
+.settings-section textarea:focus {
+    border-color: var(--accent);
+}
+
+.settings-section select {
+    cursor: pointer;
+}
+
+.settings-section input[type="range"] {
+    accent-color: var(--accent);
+    width: 100%;
+}
+
+.settings-section input[type="color"] {
+    width: 48px;
+    height: 32px;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.settings-toggle {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    cursor: pointer;
+}
+
+.settings-toggle input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.settings-mcp-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mcp-status {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.settings-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 0.45rem 1rem;
+    color: var(--text);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.settings-btn.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 600;
+}
+
+.settings-btn.primary:hover {
+    opacity: 0.85;
+}
+
+.settings-btn.danger {
+    border-color: #ff4a4a;
+    color: #ff4a4a;
+}
+
+.settings-btn.danger:hover {
+    background: rgba(255, 74, 74, 0.15);
+}
+
+.settings-test-result {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.settings-test-result.testing {
+    color: var(--accent);
+}
+
+.settings-test-result.success {
+    color: #4caf50;
+}
+
+.settings-test-result.error {
+    color: #ff4a4a;
+}
+
+.settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--panel-border);
 }

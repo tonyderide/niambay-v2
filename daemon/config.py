@@ -16,9 +16,26 @@ class Config:
     llm_api_key: str = ""
     max_memory_mb: int = 50
     max_brain_nodes: int = 10000
+    observe_windows: bool = True
+    observe_processes: bool = True
+    observe_git: bool = True
     observe_clipboard: bool = False
     observe_browser: bool = False
     paused: bool = False
+    # Voice settings
+    whisper_model: str = "base"
+    voice_language: str = "fr"
+    tts_voice: str = "default"
+    tts_speed: float = 1.0
+    # MCP connectors
+    mcp_gmail_enabled: bool = False
+    mcp_calendar_enabled: bool = False
+    mcp_custom_commands: str = "[]"
+    # Appearance
+    hologram_color: str = "#4fc3f7"
+    animation_speed: float = 1.0
+    # Privacy
+    do_not_observe: bool = False
 
     def save(self, path: str):
         Path(path).parent.mkdir(parents=True, exist_ok=True)

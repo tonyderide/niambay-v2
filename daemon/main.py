@@ -155,6 +155,14 @@ class NiamBayDaemon:
             await self._handle_audio(websocket, msg)
         elif msg_type == "notifications":
             await self._handle_notifications(websocket)
+        elif msg_type == "config_get":
+            await self._handle_config_get(websocket)
+        elif msg_type == "config_set":
+            await self._handle_config_set(websocket, msg)
+        elif msg_type == "test_llm":
+            await self._handle_test_llm(websocket)
+        elif msg_type == "clear_memory":
+            await self._handle_clear_memory(websocket)
         else:
             await websocket.send(
                 NiamBayServer.format_event("error", {"message": f"Unknown type: {msg_type}"})
@@ -275,6 +283,80 @@ class NiamBayDaemon:
         self.paused = msg.get("paused", not self.paused)
         await websocket.send(
             NiamBayServer.format_event("pause", {"paused": self.paused})
+        )
+
+    # ------------------------------------------------------------------
+    # Config handlers
+    # ------------------------------------------------------------------
+
+    async def _handle_config_get(self, websocket):
+        """Return full config as JSON."""
+        await websocket.send(
+            NiamBayServer.format_event("config", asdict(self.config))
+        )
+
+    async def _handle_config_set(self, websocket, msg: dict):
+        """Update config fields, persist, and apply live changes."""
+        data = msg.get("data", {})
+        for key, value in data.items():
+            if hasattr(self.config, key):
+                setattr(self.config, key, value)
+
+        # Persist to disk
+        config_path = Path.home() / ".niambay" / "config.json"
+        self.config.save(str(config_path))
+
+        # Apply live changes: LLM provider
+        if any(k in data for k in ("llm_provider", "llm_model", "llm_url", "llm_api_key")):
+            try:
+                self.llm_provider = self._create_llm_provider()
+                logger.info("LLM provider reloaded: %s / %s", self.config.llm_provider, self.config.llm_model)
+            except Exception as exc:
+                logger.warning("Failed to reload LLM provider: %s", exc)
+
+        # Apply live changes: paused state
+        if "paused" in data or "do_not_observe" in data:
+            self.paused = self.config.paused or self.config.do_not_observe
+
+        await websocket.send(
+            NiamBayServer.format_event("config", asdict(self.config))
+        )
+
+    async def _handle_test_llm(self, websocket):
+        """Send a test message to the LLM and return the result."""
+        if not self.llm_provider:
+            await websocket.send(
+                NiamBayServer.format_event("test_llm_result", {
+                    "success": False,
+                    "message": "LLM provider not configured or unavailable",
+                })
+            )
+            return
+        try:
+            response = self.llm_provider.chat([
+                LLMMessage(role="user", content="Dis simplement 'OK' pour confirmer que tu fonctionnes.")
+            ])
+            await websocket.send(
+                NiamBayServer.format_event("test_llm_result", {
+                    "success": True,
+                    "message": response.content,
+                    "model": response.model,
+                    "latency_ms": response.latency_ms,
+                })
+            )
+        except Exception as exc:
+            await websocket.send(
+                NiamBayServer.format_event("test_llm_result", {
+                    "success": False,
+                    "message": str(exc),
+                })
+            )
+
+    async def _handle_clear_memory(self, websocket):
+        """Clear all brain memory events."""
+        self.memory._events.clear()
+        await websocket.send(
+            NiamBayServer.format_event("clear_memory_result", {"success": True, "message": "Memory cleared"})
         )
 
     # ------------------------------------------------------------------

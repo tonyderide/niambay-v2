@@ -19,6 +19,7 @@ const statMemory = document.getElementById('stat-memory');
 const statLlm = document.getElementById('stat-llm');
 
 const modeToggle = document.getElementById('mode-toggle');
+const settingsBtn = document.getElementById('settings-btn');
 const voiceMicBtn = document.getElementById('voice-mic-btn');
 const appContainer = document.getElementById('app');
 
@@ -29,6 +30,7 @@ let isVoiceMode = false;
 // ── Init modules ─────────────────────────────────────
 Hologram.init(hologramContainer);
 Notifications.init(notificationsEl);
+Settings.init();
 
 // ── Chat helpers ─────────────────────────────────────
 let thinkingEl = null;
@@ -132,6 +134,20 @@ ws.on('notifications', (msg) => {
     });
 });
 
+ws.on('config', (msg) => {
+    const data = msg.data || msg;
+    Settings.populateForm(data);
+});
+
+ws.on('test_llm_result', (msg) => {
+    Settings.onTestResult(msg);
+});
+
+ws.on('clear_memory_result', (msg) => {
+    const data = msg.data || msg;
+    Notifications.show('Memory', data.message || 'Done', 'info');
+});
+
 ws.on('error', (msg) => {
     const data = msg.data || msg;
     Notifications.show('Erreur', data.message || 'Unknown error', 'alert');
@@ -182,6 +198,11 @@ micBtn.addEventListener('click', async () => {
         micBtn.style.color = '';
         // Will transition to thinking when audio is sent
     }
+});
+
+// ── Settings button ──────────────────────────────────
+settingsBtn.addEventListener('click', () => {
+    Settings.toggle();
 });
 
 // ── Mode toggle (chat / voice) ──────────────────────
