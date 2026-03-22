@@ -258,7 +258,7 @@ def test_reviewer_parse_verdict():
     assert Reviewer.parse_verdict("APPROVE\nAll good.") is True
     assert Reviewer.parse_verdict("REJECT\nFound issues.") is False
     assert Reviewer.parse_verdict("approve this code") is True
-    assert Reviewer.parse_verdict("I would reject this.") is True  # contains REJECT but also parsed upper
+    assert Reviewer.parse_verdict("I would reject this.") is False  # no APPROVE keyword
     assert Reviewer.parse_verdict("No issues found.") is False  # no APPROVE keyword
 
 
