@@ -1,6 +1,7 @@
-"""Tests for daemon.brain.memory."""
+"""Tests for daemon.brain."""
 
 from daemon.brain.memory import Memory, MemoryEvent
+from daemon.brain.habits import HabitTracker
 
 
 def test_memory_event():
@@ -47,3 +48,47 @@ def test_memory_query_by_source():
     results = mem.query(source="cpu")
     assert len(results) == 2
     assert all(e.source == "cpu" for e in results)
+
+
+# -- HabitTracker tests --
+
+
+def test_habit_tracker_record():
+    tracker = HabitTracker(min_occurrences=3)
+    for _ in range(3):
+        tracker.record("code", "push", hour=14)
+    habits = tracker.detect()
+    assert len(habits) == 1
+    assert habits[0].pattern == "push"
+    assert habits[0].occurrences == 3
+
+
+def test_habit_tracker_no_habit_without_repetition():
+    tracker = HabitTracker(min_occurrences=3)
+    tracker.record("code", "push", hour=14)
+    habits = tracker.detect()
+    assert habits == []
+
+
+def test_habit_tracker_save_load(tmp_path):
+    tracker = HabitTracker(min_occurrences=2)
+    for _ in range(4):
+        tracker.record("work", "meeting", hour=9)
+    path = tmp_path / "habits.json"
+    tracker.save(path)
+    loaded = HabitTracker.load(path)
+    assert loaded.min_occurrences == 2
+    habits = loaded.detect()
+    assert len(habits) == 1
+    assert habits[0].occurrences == 4
+
+
+def test_habit_tracker_predictions():
+    tracker = HabitTracker(min_occurrences=3)
+    for _ in range(3):
+        tracker.record("work", "standup", hour=9)
+    for _ in range(3):
+        tracker.record("work", "lunch", hour=12)
+    morning = tracker.predict(9)
+    assert len(morning) == 1
+    assert morning[0].pattern == "standup"
