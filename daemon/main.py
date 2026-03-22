@@ -20,6 +20,7 @@ from daemon.tasks.executor import TaskExecutor, Task
 from daemon.brain import Memory, MemoryEvent, HabitTracker
 from daemon.notifications import NotificationManager
 from daemon.voice import SpeechToText, TextToSpeech
+from daemon.prompts import SYSTEM_PROMPT
 
 logger = logging.getLogger("niambay")
 
@@ -167,7 +168,7 @@ class NiamBayDaemon:
             return
         text = msg.get("text", "")
         messages = [
-            LLMMessage(role="system", content="You are Niam-Bay, a personal AI assistant."),
+            LLMMessage(role="system", content=SYSTEM_PROMPT),
             LLMMessage(role="user", content=text),
         ]
         try:
@@ -197,7 +198,7 @@ class NiamBayDaemon:
 
         if text and self.llm_provider:
             messages = [
-                LLMMessage(role="system", content="Tu es Niam-Bay. Réponds en français, 1-3 phrases."),
+                LLMMessage(role="system", content=SYSTEM_PROMPT),
                 LLMMessage(role="user", content=text),
             ]
             try:

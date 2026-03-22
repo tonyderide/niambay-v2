@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Literal, Optional
 
 from daemon.llm.base import LLMMessage, LLMProvider
+from daemon.prompts import SYSTEM_PROMPT
 
 
 TaskType = Literal["write", "summarize", "analyze", "execute", "search"]
@@ -44,7 +45,7 @@ class TaskExecutor:
         ),
     }
 
-    SYSTEM_MESSAGE = "You are Niam-Bay's task executor. Be concise and precise."
+    SYSTEM_MESSAGE = SYSTEM_PROMPT
 
     def _build_prompt(self, task: Task) -> str:
         """Fill the template for *task* with its description and context."""
