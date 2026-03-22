@@ -6,6 +6,7 @@ from .anthropic import AnthropicProvider
 from .groq import GroqProvider
 from .google import GoogleProvider
 from .cascade import CascadeProvider
+from .sambanova import SambaNovaProvider
 
 
 def create_provider(provider: str, **kwargs) -> LLMProvider:
@@ -21,6 +22,7 @@ def create_provider(provider: str, **kwargs) -> LLMProvider:
         "groq": GroqProvider,
         "google": GoogleProvider,
         "cascade": CascadeProvider,
+        "sambanova": SambaNovaProvider,
     }
     cls = providers.get(provider)
     if cls is None:

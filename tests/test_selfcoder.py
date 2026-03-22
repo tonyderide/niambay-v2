@@ -312,3 +312,48 @@ def test_mailer_format_report():
     empty = m.format_report()
     assert "Rapport Niam-Bay Auto" in empty
     assert "COMPLÉTÉES:" not in empty
+
+
+# --- Planner tests ---
+
+
+def test_planner_creation():
+    planner = Planner()
+    assert planner.config.planner_model == "DeepSeek-R1-0528"
+    assert planner.provider is not None
+    assert planner.provider.model == "DeepSeek-R1-0528"
+
+
+# --- Coder tests ---
+
+
+def test_coder_creation():
+    coder = Coder()
+    assert coder.config.coder_model == "DeepSeek-V3.2"
+    assert coder.provider is not None
+    assert coder.provider.model == "DeepSeek-V3.2"
+    assert coder.validator is not None
+
+
+def test_coder_parse_response():
+    """extract_code pulls code from ```python blocks in LLM responses."""
+    response = (
+        "Here is the updated file:\n\n"
+        "```python\n"
+        "def hello():\n"
+        "    return 'world'\n"
+        "```\n\n"
+        "I changed the return value."
+    )
+    code = Coder.extract_code(response)
+    assert "def hello():" in code
+    assert "return 'world'" in code
+    # Should not include the fence markers
+    assert "```" not in code
+
+    # No code block -> ValueError
+    try:
+        Coder.extract_code("No code here, just text.")
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "No ```python code block" in str(e)
