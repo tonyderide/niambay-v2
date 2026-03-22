@@ -41,16 +41,17 @@ const Hologram = {
     },
 
     // State parameters: [pulseSpeed, pulseAmp, rotSpeed, particleOrbitSpeed, particleSpread, ringActive]
+    // idle = calm zen breathing (~6s cycle), active states ~60% of original speed
     _stateParams: {
-        idle:      { pulseSpeed: 0.5,  pulseAmp: 0.05, rotSpeed: 0.15, orbitSpeed: 0.3, spread: 0.0, ringActive: false },
-        speaking:  { pulseSpeed: 1.2,  pulseAmp: 0.08, rotSpeed: 0.25, orbitSpeed: 0.6, spread: 0.6, ringActive: false },
-        listening: { pulseSpeed: 0.7,  pulseAmp: 0.06, rotSpeed: 0.2,  orbitSpeed: 0.4, spread: 0.0, ringActive: true  },
-        thinking:  { pulseSpeed: 1.8,  pulseAmp: 0.04, rotSpeed: 0.8,  orbitSpeed: 1.5, spread: 0.0, ringActive: false },
-        alert:     { pulseSpeed: 3.0,  pulseAmp: 0.15, rotSpeed: 0.5,  orbitSpeed: 1.0, spread: 0.2, ringActive: false },
+        idle:      { pulseSpeed: 0.17, pulseAmp: 0.05, rotSpeed: 0.05, orbitSpeed: 0.1,  spread: 0.0, ringActive: false },
+        speaking:  { pulseSpeed: 0.72, pulseAmp: 0.08, rotSpeed: 0.15, orbitSpeed: 0.36, spread: 0.6, ringActive: false },
+        listening: { pulseSpeed: 0.42, pulseAmp: 0.06, rotSpeed: 0.12, orbitSpeed: 0.24, spread: 0.0, ringActive: true  },
+        thinking:  { pulseSpeed: 1.08, pulseAmp: 0.04, rotSpeed: 0.48, orbitSpeed: 0.9,  spread: 0.0, ringActive: false },
+        alert:     { pulseSpeed: 1.8,  pulseAmp: 0.15, rotSpeed: 0.3,  orbitSpeed: 0.6,  spread: 0.2, ringActive: false },
     },
 
     // Current interpolated params
-    _params: { pulseSpeed: 0.5, pulseAmp: 0.05, rotSpeed: 0.15, orbitSpeed: 0.3, spread: 0.0, ringActive: false },
+    _params: { pulseSpeed: 0.17, pulseAmp: 0.05, rotSpeed: 0.05, orbitSpeed: 0.1, spread: 0.0, ringActive: false },
 
     // Particle data
     _particleCount: 300,
@@ -317,15 +318,15 @@ const Hologram = {
         this.outerGlow.scale.setScalar(pulse * 1.1);
 
         // --- Inner glow opacity pulse ---
-        this.innerGlow.material.opacity = 0.06 + Math.sin(time * 1.5) * 0.03;
-        this.outerGlow.material.opacity = 0.02 + Math.sin(time * 0.8) * 0.015;
+        this.innerGlow.material.opacity = 0.06 + Math.sin(time * 0.5) * 0.03;
+        this.outerGlow.material.opacity = 0.02 + Math.sin(time * 0.25) * 0.015;
 
         // --- Wireframe opacity shimmer ---
-        this.sphere.material.opacity = 0.5 + Math.sin(time * 2.0) * 0.15;
+        this.sphere.material.opacity = 0.5 + Math.sin(time * 0.7) * 0.15;
 
         // --- Point light intensity ---
         const baseLightIntensity = this._targetState === 'speaking' ? 3.5 : 2.0;
-        this._pointLight.intensity = baseLightIntensity + Math.sin(time * 3.0) * 0.5;
+        this._pointLight.intensity = baseLightIntensity + Math.sin(time * 1.0) * 0.5;
 
         // --- Particle orbits ---
         this._updateParticles(time);

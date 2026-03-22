@@ -26,6 +26,8 @@ Hologram.init(hologramContainer);
 Notifications.init(notificationsEl);
 
 // ── Chat helpers ─────────────────────────────────────
+let thinkingEl = null;
+
 function addMessage(text, role) {
     const div = document.createElement('div');
     div.className = 'msg ' + role;
@@ -34,11 +36,29 @@ function addMessage(text, role) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+function setThinking(show) {
+    if (show) {
+        if (thinkingEl) return;
+        const div = document.createElement('div');
+        div.className = 'msg assistant thinking-indicator';
+        div.innerHTML = '<span class="thinking-dots"><span></span><span></span><span></span></span>';
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        thinkingEl = div;
+    } else {
+        if (thinkingEl) {
+            thinkingEl.remove();
+            thinkingEl = null;
+        }
+    }
+}
+
 // ── WebSocket handlers ───────────────────────────────
 
 ws.on('chat_response', (msg) => {
     const data = msg.data || msg;
     const text = data.text || data.message || '';
+    setThinking(false);
     addMessage(text, 'assistant');
     Hologram.setState('speaking');
     setTimeout(() => Hologram.setState('idle'), 3000);
@@ -46,6 +66,7 @@ ws.on('chat_response', (msg) => {
 
 ws.on('voice_response', (msg) => {
     const data = msg.data || msg;
+    setThinking(false);
     // Show transcription as user message
     if (data.transcription) {
         addMessage(data.transcription, 'user');
@@ -125,12 +146,14 @@ chatForm.addEventListener('submit', (e) => {
     addMessage(text, 'user');
     ws.send('chat', { text: text });
     chatInput.value = '';
+    setThinking(true);
     Hologram.setState('thinking');
 });
 
 // ── Voice (mic button) ──────────────────────────────
 Voice.onAudioReady = (base64Audio) => {
     ws.send('audio', { audio: base64Audio });
+    setThinking(true);
     Hologram.setState('thinking');
 };
 

@@ -185,6 +185,36 @@ body {
     background: rgba(255, 255, 255, 0.15);
 }
 
+/* ── Thinking indicator ────────────────────────────── */
+
+.thinking-indicator {
+    padding: 0.8rem 1.2rem;
+}
+
+.thinking-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.thinking-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: thinking-bounce 1.4s infinite ease-in-out both;
+}
+
+.thinking-dots span:nth-child(1) { animation-delay: 0s; }
+.thinking-dots span:nth-child(2) { animation-delay: 0.16s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes thinking-bounce {
+    0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
 /* ── Animations ────────────────────────────────────── */
 
 @keyframes pulse {
