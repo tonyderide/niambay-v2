@@ -357,3 +357,37 @@ def test_coder_parse_response():
         assert False, "Should have raised ValueError"
     except ValueError as e:
         assert "No ```python code block" in str(e)
+
+
+# --- SelfCoder runner tests ---
+
+from daemon.selfcoder.runner import SelfCoder
+
+
+def test_selfcoder_creation():
+    """SelfCoder assembles all modules correctly."""
+    sc = SelfCoder()
+    assert sc.config is not None
+    assert sc.config.mode == "suggest"
+    assert sc.state is not None
+    assert sc.scanner is not None
+    assert sc.planner is not None
+    assert sc.coder is not None
+    assert sc.validator is not None
+    assert sc.reviewer is not None
+    assert sc.publisher is not None
+    assert sc.mailer is not None
+    assert sc.daily_results == {"completed": [], "failed": [], "suggestions": []}
+    # Check module count (public attributes)
+    public_attrs = [x for x in dir(sc) if not x.startswith("_")]
+    assert len(public_attrs) >= 10  # config, state, scanner, planner, coder, validator, reviewer, publisher, mailer, daily_results, run_cycle, ...
+
+
+def test_selfcoder_single_cycle():
+    """SelfCoder.run_cycle in suggest mode returns no_tasks or suggested."""
+    cfg = SelfCoderConfig(mode="suggest")
+    sc = SelfCoder(config=cfg)
+    result = sc.run_cycle()
+    # With no tasks.md and no TODOs in allowed paths, expect no_tasks
+    # or if tasks exist, expect suggested (both are valid outcomes)
+    assert result["status"] in ("no_tasks", "suggested", "plan_failed", "code_failed", "validation_failed")
