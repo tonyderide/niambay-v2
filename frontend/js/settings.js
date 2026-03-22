@@ -42,6 +42,10 @@ const Settings = {
         this._setChecked('#s-obs-git', config.observe_git !== false);
         this._setChecked('#s-obs-clipboard', config.observe_clipboard || false);
         this._setChecked('#s-obs-browser', config.observe_browser || false);
+        this._setChecked('#s-obs-screen', config.observe_screen !== false);
+        this._setVal('#s-screen-interval', config.screen_interval || 30);
+        const screenIntervalLabel = f.querySelector('#s-screen-interval-val');
+        if (screenIntervalLabel) screenIntervalLabel.textContent = (config.screen_interval || 30) + 's';
         this._setVal('#s-collect-interval', config.collect_interval || 2);
         const intervalLabel = f.querySelector('#s-collect-interval-val');
         if (intervalLabel) intervalLabel.textContent = (config.collect_interval || 2) + 's';
@@ -87,6 +91,8 @@ const Settings = {
             observe_git: this._getChecked('#s-obs-git'),
             observe_clipboard: this._getChecked('#s-obs-clipboard'),
             observe_browser: this._getChecked('#s-obs-browser'),
+            observe_screen: this._getChecked('#s-obs-screen'),
+            screen_interval: parseInt(this._getVal('#s-screen-interval')) || 30,
             collect_interval: parseFloat(this._getVal('#s-collect-interval')) || 2,
             paused: this._getChecked('#s-paused'),
             mcp_gmail_enabled: this._getChecked('#s-mcp-gmail'),
@@ -227,6 +233,10 @@ const Settings = {
                     <label class="settings-toggle"><input type="checkbox" id="s-obs-git"> Monitor git</label>
                     <label class="settings-toggle"><input type="checkbox" id="s-obs-clipboard"> Monitor clipboard</label>
                     <label class="settings-toggle"><input type="checkbox" id="s-obs-browser"> Monitor browser</label>
+                    <label class="settings-toggle"><input type="checkbox" id="s-obs-screen"> Screen capture</label>
+                    <label>Screen interval: <span id="s-screen-interval-val">30s</span>
+                        <input type="range" id="s-screen-interval" min="10" max="120" step="5" value="30">
+                    </label>
                     <label>Collect interval: <span id="s-collect-interval-val">2s</span>
                         <input type="range" id="s-collect-interval" min="1" max="10" step="0.5" value="2">
                     </label>
@@ -312,6 +322,9 @@ const Settings = {
         // Sliders update labels
         this.panel.querySelector('#s-collect-interval').addEventListener('input', (e) => {
             this.panel.querySelector('#s-collect-interval-val').textContent = e.target.value + 's';
+        });
+        this.panel.querySelector('#s-screen-interval').addEventListener('input', (e) => {
+            this.panel.querySelector('#s-screen-interval-val').textContent = e.target.value + 's';
         });
         this.panel.querySelector('#s-tts-speed').addEventListener('input', (e) => {
             this.panel.querySelector('#s-tts-speed-val').textContent = e.target.value + 'x';

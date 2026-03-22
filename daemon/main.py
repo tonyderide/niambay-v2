@@ -10,7 +10,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from daemon.config import Config
-from daemon.collectors import WindowCollector, ProcessCollector, GitCollector
+from daemon.collectors import WindowCollector, ProcessCollector, GitCollector, ScreenCollector
 from daemon.collectors.base import CollectorEvent
 from daemon.llm import create_provider, create_cascade
 from daemon.llm.base import LLMMessage
@@ -42,6 +42,18 @@ class NiamBayDaemon:
             ProcessCollector(),
             GitCollector(watch_paths=git_repos),
         ]
+
+        # --- Screen collector (optional) ---
+        if self.config.observe_screen:
+            vision = None
+            if getattr(self.config, 'gemini_api_key', ''):
+                from .llm.google import GoogleProvider
+                vision = GoogleProvider(api_key=self.config.gemini_api_key)
+            self.collectors.append(ScreenCollector(
+                interval=self.config.screen_interval,
+                resize_width=self.config.screen_resize_width,
+                vision_provider=vision,
+            ))
 
         # --- WebSocket server ---
         self.server = NiamBayServer(
@@ -174,6 +186,8 @@ class NiamBayDaemon:
             await self._handle_test_llm(websocket)
         elif msg_type == "clear_memory":
             await self._handle_clear_memory(websocket)
+        elif msg_type == "screenshot":
+            await self._handle_screenshot(websocket)
         else:
             await websocket.send(
                 NiamBayServer.format_event("error", {"message": f"Unknown type: {msg_type}"})
@@ -369,6 +383,20 @@ class NiamBayDaemon:
         await websocket.send(
             NiamBayServer.format_event("clear_memory_result", {"success": True, "message": "Memory cleared"})
         )
+
+    async def _handle_screenshot(self, websocket):
+        """Capture screen and return analysis + base64 image."""
+        sc = next((c for c in self.collectors if c.name == "screen"), None)
+        if sc:
+            b64 = sc.capture_base64()
+            analysis = sc.analyze(b64)
+            await websocket.send(
+                NiamBayServer.format_event("screenshot_result", {"analysis": analysis, "image": b64})
+            )
+        else:
+            await websocket.send(
+                NiamBayServer.format_event("screenshot_result", {"analysis": "Screen collector not available", "image": ""})
+            )
 
     # ------------------------------------------------------------------
     # Main loops

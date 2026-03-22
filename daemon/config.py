@@ -24,6 +24,9 @@ class Config:
     observe_git: bool = True
     observe_clipboard: bool = False
     observe_browser: bool = False
+    observe_screen: bool = True
+    screen_interval: int = 30
+    screen_resize_width: int = 800
     paused: bool = False
     # Voice settings
     whisper_model: str = "base"
