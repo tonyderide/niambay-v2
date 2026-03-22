@@ -1,9 +1,13 @@
 """Tests for SelfCoder config, allowlists, and state persistence."""
 
 import os
+import re
 import tempfile
 
 from daemon.selfcoder.config import SelfCoderConfig
+from daemon.selfcoder.publisher import Publisher
+from daemon.selfcoder.reviewer import Reviewer
+from daemon.selfcoder.scanner import Scanner
 from daemon.selfcoder.state import SelfCoderState
 from daemon.selfcoder.validator import Validator
 
@@ -170,3 +174,55 @@ def test_state_save_load():
         assert loaded.last_run != ""
     finally:
         os.unlink(tmp_path)
+
+
+# --- Scanner tests ---
+
+
+def test_scanner_manual_tasks(tmp_path):
+    """Scanner reads tasks.md and returns one task per line."""
+    tasks_file = tmp_path / "tasks.md"
+    tasks_file.write_text("# Backlog\n- Fix login bug\n- Add logging\n\n", encoding="utf-8")
+    scanner = Scanner(str(tmp_path))
+    tasks = scanner.find_manual_tasks()
+    assert len(tasks) == 2
+    assert tasks[0]["source"] == "manual"
+    assert tasks[0]["description"] == "Fix login bug"
+    assert tasks[0]["priority"] == 1
+    assert tasks[1]["description"] == "Add logging"
+
+
+def test_scanner_find_todos(tmp_path):
+    """Scanner finds TODO/FIXME comments in allowed Python files."""
+    pkg = tmp_path / "daemon" / "selfcoder"
+    pkg.mkdir(parents=True)
+    py_file = pkg / "example.py"
+    py_file.write_text("x = 1\n# TODO: refactor this\n# FIXME: memory leak\n", encoding="utf-8")
+    scanner = Scanner(str(tmp_path))
+    todos = scanner.find_todos()
+    assert len(todos) == 2
+    assert todos[0]["source"] == "todo"
+    assert "refactor" in todos[0]["description"]
+    assert todos[0]["line"] == 2
+    assert todos[1]["line"] == 3
+
+
+def test_scanner_get_all_tasks_priority(tmp_path):
+    """get_all_tasks returns tasks sorted by priority (manual first)."""
+    # Create a manual task
+    tasks_file = tmp_path / "tasks.md"
+    tasks_file.write_text("- Deploy v2\n", encoding="utf-8")
+    # Create a TODO
+    pkg = tmp_path / "daemon" / "mod"
+    pkg.mkdir(parents=True)
+    (pkg / "a.py").write_text("# TODO: cleanup\n", encoding="utf-8")
+    config = SelfCoderConfig(
+        project_root=str(tmp_path),
+        allowed_patterns=["daemon/**/*.py", "*.md"],
+    )
+    scanner = Scanner(str(tmp_path), config=config)
+    all_tasks = scanner.get_all_tasks()
+    assert len(all_tasks) >= 2
+    # Manual (priority 1) should come before todo (priority 3)
+    sources = [t["source"] for t in all_tasks]
+    assert sources.index("manual") < sources.index("todo")
