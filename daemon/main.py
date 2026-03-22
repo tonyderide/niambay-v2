@@ -14,10 +14,12 @@ from daemon.collectors import WindowCollector, ProcessCollector, GitCollector
 from daemon.collectors.base import CollectorEvent
 from daemon.llm import create_provider
 from daemon.llm.base import LLMMessage
+from daemon.server.http import FrontendServer
 from daemon.server.ws import NiamBayServer
 from daemon.tasks.executor import TaskExecutor, Task
 from daemon.brain import Memory, MemoryEvent, HabitTracker
 from daemon.notifications import NotificationManager
+from daemon.voice import SpeechToText, TextToSpeech
 
 logger = logging.getLogger("niambay")
 
@@ -57,6 +59,14 @@ class NiamBayDaemon:
         self.memory = Memory()
         self.habits = HabitTracker()
         self.notifier = NotificationManager()
+
+        # --- HTTP server (serves frontend) ---
+        frontend_dir = str(Path(__file__).parent.parent / "frontend")
+        self.http_server = FrontendServer(port=8080, frontend_dir=frontend_dir)
+
+        # --- Voice (lazy-loaded, optional) ---
+        self.stt = SpeechToText()
+        self.tts = TextToSpeech()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -140,6 +150,8 @@ class NiamBayDaemon:
             await self._handle_status(websocket)
         elif msg_type == "pause":
             await self._handle_pause(websocket, msg)
+        elif msg_type == "audio":
+            await self._handle_audio(websocket, msg)
         elif msg_type == "notifications":
             await self._handle_notifications(websocket)
         else:
@@ -171,6 +183,43 @@ class NiamBayDaemon:
         except Exception as exc:
             await websocket.send(
                 NiamBayServer.format_event("error", {"message": f"LLM error: {exc}"})
+            )
+
+    async def _handle_audio(self, websocket, msg: dict):
+        """Transcribe incoming audio and optionally respond via LLM + TTS."""
+        import base64
+
+        audio_b64 = msg.get("audio", "")
+        audio_bytes = base64.b64decode(audio_b64)
+
+        # Transcribe
+        text = self.stt.transcribe_bytes(audio_bytes)
+
+        if text and self.llm_provider:
+            messages = [
+                LLMMessage(role="system", content="Tu es Niam-Bay. Réponds en français, 1-3 phrases."),
+                LLMMessage(role="user", content=text),
+            ]
+            try:
+                response = self.llm_provider.chat(messages)
+                # Speak response asynchronously
+                self.tts.speak_async(response.content)
+                await websocket.send(
+                    NiamBayServer.format_event("voice_response", {
+                        "transcription": text,
+                        "response": response.content,
+                    })
+                )
+            except Exception as exc:
+                await websocket.send(
+                    NiamBayServer.format_event("error", {"message": f"Voice LLM error: {exc}"})
+                )
+        else:
+            await websocket.send(
+                NiamBayServer.format_event("voice_response", {
+                    "transcription": text or "",
+                    "response": "",
+                })
             )
 
     async def _handle_task(self, websocket, msg: dict):
@@ -244,8 +293,13 @@ class NiamBayDaemon:
             await asyncio.sleep(self.config.collect_interval)
 
     async def run(self):
-        """Start the WebSocket server and collection loop in parallel."""
+        """Start HTTP server, WebSocket server and collection loop."""
         self.running = True
+
+        # Start HTTP server in a daemon thread (non-blocking)
+        self.http_server.start()
+        logger.info("Frontend HTTP server on http://localhost:%d", self.http_server.port)
+
         logger.info(
             "Niam-Bay daemon starting — ws://%s:%d — interval %.1fs",
             self.config.ws_host, self.config.ws_port, self.config.collect_interval,
@@ -258,6 +312,7 @@ class NiamBayDaemon:
     def stop(self):
         """Signal the daemon to stop."""
         self.running = False
+        self.http_server.stop()
         logger.info("Niam-Bay daemon stopping")
 
 
