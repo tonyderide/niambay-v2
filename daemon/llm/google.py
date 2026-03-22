@@ -48,5 +48,27 @@ class GoogleProvider(LLMProvider):
 
         return LLMResponse(content=content, model=self.model, tokens_used=tokens, latency_ms=latency)
 
+    def analyze_image(self, image_base64: str, prompt: str = "Describe what you see.") -> str:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        body = {
+            "contents": [{
+                "role": "user",
+                "parts": [
+                    {"text": prompt},
+                    {"inlineData": {"mimeType": "image/jpeg", "data": image_base64}}
+                ]
+            }]
+        }
+        payload = json.dumps(body).encode()
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=30)
+        data = json.loads(resp.read())
+        candidates = data.get("candidates", [])
+        if candidates:
+            parts = candidates[0].get("content", {}).get("parts", [])
+            if parts:
+                return parts[0].get("text", "")
+        return ""
+
     def is_available(self) -> bool:
         return bool(self.api_key)
