@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
     <script src="js/ws.js" defer></script>
+    <script src="js/hologram.js" defer></script>
+    <script src="js/chat.js" defer></script>
+    <script src="js/notifications.js" defer></script>
+    <script src="js/voice.js" defer></script>
     <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -33,6 +37,7 @@
             <div id="chat-messages"></div>
             <form id="chat-form">
                 <input type="text" id="chat-input" placeholder="Parle-moi..." autocomplete="off">
+                <button type="button" id="mic-btn" title="Voice input">🎤</button>
                 <button type="submit" id="chat-send">Envoyer</button>
             </form>
         </aside>
