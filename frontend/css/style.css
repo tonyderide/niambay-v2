@@ -74,16 +74,18 @@ body {
     flex: 1;
     display: flex;
     overflow: hidden;
+    position: relative;
 }
 
 /* ── Hologram container ────────────────────────────── */
 
 #hologram-container {
-    flex: 0 0 60%;
+    flex: 0 0 40%;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: flex 0.5s ease;
 }
 
 #hologram-canvas {
@@ -95,13 +97,81 @@ body {
 /* ── Chat panel ────────────────────────────────────── */
 
 #chat-panel {
-    flex: 0 0 40%;
+    flex: 1;
     display: flex;
     flex-direction: column;
     background: var(--panel-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-left: 1px solid var(--panel-border);
+    transition: flex 0.5s ease, width 0.5s ease, opacity 0.5s ease;
+}
+
+/* ── Voice mode ───────────────────────────────────── */
+
+#app.voice-mode #hologram-container {
+    flex: 1;
+}
+
+#app.voice-mode #chat-panel {
+    flex: 0;
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    border-left: none;
+}
+
+/* ── Mode toggle button ──────────────────────────── */
+
+#mode-toggle {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s;
+}
+
+#mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Floating mic button (voice mode) ────────────── */
+
+#voice-mic-btn {
+    display: none;
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(79, 195, 247, 0.15);
+    border: 2px solid var(--accent);
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s, box-shadow 0.2s;
+    z-index: 20;
+}
+
+#voice-mic-btn:hover {
+    background: rgba(79, 195, 247, 0.3);
+    box-shadow: 0 0 16px var(--glow-color);
+}
+
+#voice-mic-btn.recording {
+    background: rgba(255, 74, 74, 0.3);
+    border-color: #ff4a4a;
+    box-shadow: 0 0 16px rgba(255, 74, 74, 0.5);
+}
+
+#app.voice-mode #voice-mic-btn {
+    display: block;
 }
 
 #chat-messages {
@@ -263,8 +333,12 @@ body {
     }
 
     #chat-panel {
-        flex: 0 0 50%;
+        flex: 1;
         border-left: none;
         border-top: 1px solid var(--panel-border);
+    }
+
+    #app.voice-mode #hologram-container {
+        flex: 1;
     }
 }

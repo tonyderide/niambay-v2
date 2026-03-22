@@ -18,8 +18,13 @@ const statEvents = document.getElementById('stat-events');
 const statMemory = document.getElementById('stat-memory');
 const statLlm = document.getElementById('stat-llm');
 
+const modeToggle = document.getElementById('mode-toggle');
+const voiceMicBtn = document.getElementById('voice-mic-btn');
+const appContainer = document.getElementById('app');
+
 // ── Event counter ────────────────────────────────────
 let eventCount = 0;
+let isVoiceMode = false;
 
 // ── Init modules ─────────────────────────────────────
 Hologram.init(hologramContainer);
@@ -176,6 +181,36 @@ micBtn.addEventListener('click', async () => {
         micBtn.style.background = '';
         micBtn.style.color = '';
         // Will transition to thinking when audio is sent
+    }
+});
+
+// ── Mode toggle (chat / voice) ──────────────────────
+modeToggle.addEventListener('click', () => {
+    isVoiceMode = !isVoiceMode;
+    appContainer.classList.toggle('voice-mode', isVoiceMode);
+    modeToggle.textContent = isVoiceMode ? '💬' : '🎤';
+    modeToggle.title = isVoiceMode ? 'Switch to chat mode' : 'Switch to voice mode';
+    // Let Three.js adapt to new container size after transition
+    setTimeout(() => Hologram.resize(), 550);
+});
+
+// ── Floating mic button (voice mode) ────────────────
+voiceMicBtn.addEventListener('click', async () => {
+    if (!Voice.stream) {
+        try {
+            await Voice.init();
+        } catch (err) {
+            console.error('[App] Mic init failed:', err);
+            Notifications.show('Micro', 'Impossible d\'accéder au microphone', 'alert');
+            return;
+        }
+    }
+    Voice.toggle();
+    if (Voice.isListening) {
+        voiceMicBtn.classList.add('recording');
+        Hologram.setState('listening');
+    } else {
+        voiceMicBtn.classList.remove('recording');
     }
 });
 
