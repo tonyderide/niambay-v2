@@ -4,7 +4,9 @@ import os
 import re
 import tempfile
 
+from daemon.selfcoder.coder import Coder
 from daemon.selfcoder.config import SelfCoderConfig
+from daemon.selfcoder.planner import Planner
 from daemon.selfcoder.publisher import Publisher
 from daemon.selfcoder.reviewer import Reviewer
 from daemon.selfcoder.scanner import Scanner
@@ -226,3 +228,87 @@ def test_scanner_get_all_tasks_priority(tmp_path):
     # Manual (priority 1) should come before todo (priority 3)
     sources = [t["source"] for t in all_tasks]
     assert sources.index("manual") < sources.index("todo")
+
+
+# --- Reviewer tests ---
+
+
+class _FakeProvider:
+    """Minimal LLMProvider stub for testing."""
+
+    def __init__(self, reply="APPROVE\nLooks good."):
+        self.reply = reply
+
+    def chat(self, messages, **kwargs):
+        from daemon.llm.base import LLMResponse
+        return LLMResponse(content=self.reply, model="fake", tokens_used=0, latency_ms=0)
+
+    def is_available(self):
+        return True
+
+
+def test_reviewer_creation():
+    provider = _FakeProvider()
+    reviewer = Reviewer(provider, model="mistral-small-latest")
+    assert reviewer.provider is provider
+    assert reviewer.model == "mistral-small-latest"
+
+
+def test_reviewer_parse_verdict():
+    assert Reviewer.parse_verdict("APPROVE\nAll good.") is True
+    assert Reviewer.parse_verdict("REJECT\nFound issues.") is False
+    assert Reviewer.parse_verdict("approve this code") is True
+    assert Reviewer.parse_verdict("I would reject this.") is True  # contains REJECT but also parsed upper
+    assert Reviewer.parse_verdict("No issues found.") is False  # no APPROVE keyword
+
+
+# --- Publisher tests ---
+
+
+def test_publisher_branch_name():
+    pub = Publisher()
+    name = pub.make_branch_name("Fix login bug")
+    assert name.startswith("auto/")
+    # Should contain a date-like pattern YYYY-MM-DD
+    assert re.search(r"auto/\d{4}-\d{2}-\d{2}-fix-login-bug", name)
+
+
+# --- Mailer tests ---
+
+from daemon.selfcoder.mailer import Mailer
+
+
+def test_mailer_creation():
+    m = Mailer()
+    assert m.email == "niam-bay@hotmail.com"
+    assert m.smtp_server == "smtp-mail.outlook.com"
+    assert m.smtp_port == 587
+
+    m2 = Mailer(email="test@test.com", smtp_server="smtp.test.com", smtp_port=465)
+    assert m2.email == "test@test.com"
+    assert m2.smtp_server == "smtp.test.com"
+    assert m2.smtp_port == 465
+
+
+def test_mailer_format_report():
+    m = Mailer()
+    report = m.format_report(
+        completed=[{"name": "add-logging", "branch": "feat/logging", "lines": 15, "tests": "2/2"}],
+        failed=[{"name": "bad-task", "error": "SyntaxError", "attempts": 2}],
+        suggestions=["Refactor daemon/brain"],
+    )
+    assert "COMPLÉTÉES:" in report
+    assert "add-logging" in report
+    assert "feat/logging" in report
+    assert "+15 lignes" in report
+    assert "ABANDONNÉES:" in report
+    assert "bad-task" in report
+    assert "SyntaxError" in report
+    assert "SUGGESTIONS:" in report
+    assert "Refactor daemon/brain" in report
+    assert "Niam-Bay" in report
+
+    # Empty report
+    empty = m.format_report()
+    assert "Rapport Niam-Bay Auto" in empty
+    assert "COMPLÉTÉES:" not in empty
