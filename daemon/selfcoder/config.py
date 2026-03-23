@@ -51,7 +51,7 @@ class SelfCoderConfig:
     state_path: str = str(Path.home() / ".niambay" / "selfcoder_state.json")
 
     # LLM models
-    planner_model: str = "DeepSeek-R1-0528"
+    planner_model: str = "DeepSeek-V3-0324"  # V3 not R1 — R1 adds <think> tags that break JSON parsing
     coder_model: str = "DeepSeek-V3-0324"
     reviewer_model: str = "mistral-small-latest"
 
