@@ -46,10 +46,31 @@ class Planner:
         response = self.provider.chat(messages, model=self.config.planner_model, temperature=0.3)
         log.info("Planner: got response (%d tokens, %dms)", response.tokens_used, response.latency_ms)
 
-        # Parse JSON from response (strip markdown fences if present)
+        # Parse JSON from response (handle thinking tags, markdown fences)
         text = response.content.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-            text = text.rsplit("```", 1)[0]
 
-        return json.loads(text)
+        # DeepSeek R1 wraps response in <think>...</think> tags
+        if "<think>" in text:
+            text = text.split("</think>")[-1].strip()
+
+        # Strip markdown fences
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
+
+        # Try to find JSON object in the text
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Find first { and last }
+            start = text.find("{")
+            end = text.rfind("}")
+            if start >= 0 and end > start:
+                return json.loads(text[start:end+1])
+            # Fallback: return first task as-is
+            log.warning("Planner: could not parse LLM response, using first task")
+            if tasks:
+                t = tasks[0]
+                return {"task_id": t.get("description","")[:50], "file_path": t.get("file",""), "description": t.get("description",""), "approach": "fix", "estimated_lines": 10}
+            raise
