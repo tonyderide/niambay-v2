@@ -52,7 +52,7 @@ class SelfCoderConfig:
 
     # LLM models
     planner_model: str = "DeepSeek-R1-0528"
-    coder_model: str = "DeepSeek-V3.2"
+    coder_model: str = "DeepSeek-V3-0324"
     reviewer_model: str = "mistral-small-latest"
 
     # Email
