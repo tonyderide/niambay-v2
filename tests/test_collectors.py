@@ -40,11 +40,12 @@ def test_process_collector_collect():
 
 
 def test_process_collector_detects_high_cpu():
-    pc = ProcessCollector(cpu_threshold=0.0)
+    # Use -1 threshold so any CPU value (even 0.0) triggers the alert
+    pc = ProcessCollector(cpu_threshold=-1.0)
     events = pc.collect()
     alert_events = [e for e in events if e.event_type == "alert" and e.data.get("alert") == "high_cpu"]
     assert len(alert_events) >= 1
-    assert alert_events[0].data["threshold"] == 0.0
+    assert alert_events[0].data["threshold"] == -1.0
 
 
 from daemon.collectors.git import GitCollector
