@@ -16,13 +16,13 @@ from daemon.selfcoder.validator import Validator
 
 def test_config_defaults():
     cfg = SelfCoderConfig()
-    assert cfg.max_lines_per_cycle == 30
+    assert cfg.max_lines_per_cycle == 50
     assert cfg.max_files_per_cycle == 3
     assert cfg.cooldown_minutes == 30
     assert cfg.max_attempts_per_task == 2
     assert cfg.mode == "suggest"
-    assert cfg.planner_model == "DeepSeek-R1-0528"
-    assert cfg.coder_model == "DeepSeek-V3.2"
+    assert cfg.planner_model == "DeepSeek-V3-0324"
+    assert cfg.coder_model == "DeepSeek-V3-0324"
     assert cfg.reviewer_model == "mistral-small-latest"
     assert cfg.email_from == "niam-bay@hotmail.com"
     assert cfg.smtp_server == "smtp-mail.outlook.com"
@@ -88,11 +88,11 @@ def test_validator_forbidden_patterns():
 
 def test_validator_diff_size():
     v = Validator()
-    # Within limits (30 lines, 3 files)
+    # Within limits (50 lines, 3 files)
     assert v.check_diff_size(10, 2) is True
-    assert v.check_diff_size(30, 3) is True  # exact boundary
+    assert v.check_diff_size(50, 3) is True  # exact boundary
     # Over limits
-    assert v.check_diff_size(31, 1) is False
+    assert v.check_diff_size(51, 1) is False
     assert v.check_diff_size(10, 4) is False
     assert v.check_diff_size(100, 10) is False
 
@@ -319,9 +319,9 @@ def test_mailer_format_report():
 
 def test_planner_creation():
     planner = Planner()
-    assert planner.config.planner_model == "DeepSeek-R1-0528"
+    assert planner.config.planner_model == "DeepSeek-V3-0324"
     assert planner.provider is not None
-    assert planner.provider.model == "DeepSeek-R1-0528"
+    assert planner.provider.model == "DeepSeek-V3-0324"
 
 
 # --- Coder tests ---
@@ -329,9 +329,9 @@ def test_planner_creation():
 
 def test_coder_creation():
     coder = Coder()
-    assert coder.config.coder_model == "DeepSeek-V3.2"
+    assert coder.config.coder_model == "DeepSeek-V3-0324"
     assert coder.provider is not None
-    assert coder.provider.model == "DeepSeek-V3.2"
+    assert coder.provider.model == "DeepSeek-V3-0324"
     assert coder.validator is not None
 
 
@@ -351,12 +351,14 @@ def test_coder_parse_response():
     # Should not include the fence markers
     assert "```" not in code
 
-    # No code block -> ValueError
-    try:
-        Coder.extract_code("No code here, just text.")
-        assert False, "Should have raised ValueError"
-    except ValueError as e:
-        assert "No ```python code block" in str(e)
+    # No code block -> fallback to treating entire response as code
+    fallback = Coder.extract_code("x = 1\ny = 2")
+    assert "x = 1" in fallback
+    assert "y = 2" in fallback
+
+    # Generic ``` block (without python tag) should also work
+    generic = Coder.extract_code("Here:\n```\ndef foo():\n    pass\n```\n")
+    assert "def foo():" in generic
 
 
 # --- SelfCoder runner tests ---

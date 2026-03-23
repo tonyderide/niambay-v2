@@ -12,8 +12,11 @@ log = logging.getLogger(__name__)
 PLANNER_SYSTEM = """You are a code planner for Niam-Bay, a self-improving daemon.
 Given a list of candidate tasks, pick the single best one and return a JSON plan.
 
+IMPORTANT: Pick tasks that require LESS THAN 30 lines of change. Avoid large refactors.
+
 Rules:
 - Pick the task with the highest impact and lowest risk.
+- Prefer small, focused changes over big rewrites.
 - Return ONLY valid JSON with these keys:
   {"task_id": str, "file_path": str, "description": str, "approach": str, "estimated_lines": int}
 - No markdown, no explanation outside the JSON."""

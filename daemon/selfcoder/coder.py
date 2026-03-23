@@ -59,15 +59,42 @@ class Coder:
 
     @staticmethod
     def extract_code(response: str) -> str:
-        """Parse ```python code blocks from LLM response.
+        """Extract code from LLM response, with flexible parsing.
 
-        Returns the content of the first ```python block found.
-        Raises ValueError if no code block is found.
+        Strategy:
+        1. If response has ```python blocks, extract the first one.
+        2. If response has ``` blocks (without language tag), extract the first one.
+        3. If no blocks at all, treat the entire response as code
+           (strip leading/trailing markdown or explanation lines).
+
+        Returns extracted code string.
         """
+        # Strategy 1: ```python block
         match = re.search(r"```python\s*\n(.*?)```", response, re.DOTALL)
-        if not match:
-            raise ValueError("No ```python code block found in LLM response")
-        return match.group(1).rstrip("\n")
+        if match:
+            return match.group(1).rstrip("\n")
+
+        # Strategy 2: generic ``` block
+        match = re.search(r"```\s*\n(.*?)```", response, re.DOTALL)
+        if match:
+            return match.group(1).rstrip("\n")
+
+        # Strategy 3: no code blocks — treat entire response as code
+        # Strip lines that look like markdown explanations (starting with # not followed by space+code-comment pattern)
+        lines = response.strip().splitlines()
+        code_lines = []
+        for line in lines:
+            stripped = line.strip()
+            # Skip empty leading/trailing markdown-style lines
+            if not code_lines and (stripped.startswith("```") or stripped == ""):
+                continue
+            if stripped.startswith("```"):
+                break
+            code_lines.append(line)
+        # Remove trailing blank lines
+        while code_lines and code_lines[-1].strip() == "":
+            code_lines.pop()
+        return "\n".join(code_lines)
 
     def apply_changes(self, file_path: str, new_content: str) -> None:
         """Write new content to file after validator checks.

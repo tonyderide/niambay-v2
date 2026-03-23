@@ -38,7 +38,7 @@ def _glob_to_regex(pattern: str) -> re.Pattern:
 @dataclass
 class SelfCoderConfig:
     # Cycle limits
-    max_lines_per_cycle: int = 30
+    max_lines_per_cycle: int = 50
     max_files_per_cycle: int = 3
     cooldown_minutes: int = 30
     max_attempts_per_task: int = 2
