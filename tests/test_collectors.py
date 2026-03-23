@@ -48,6 +48,20 @@ def test_process_collector_detects_high_cpu():
     assert alert_events[0].data["threshold"] == -1.0
 
 
+from daemon.collectors.filesystem import FilesystemCollector
+
+def test_filesystem_collector_creation():
+    fc = FilesystemCollector(watch_paths=["C:/niambay-v2"])
+    assert isinstance(fc, Collector)
+    fc.cleanup()
+
+def test_filesystem_collector_collect():
+    fc = FilesystemCollector(watch_paths=["C:/niambay-v2"])
+    events = fc.collect()
+    assert isinstance(events, list)
+    fc.cleanup()
+
+
 from daemon.collectors.git import GitCollector
 
 def test_git_collector():
