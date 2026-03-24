@@ -30,10 +30,82 @@
 
     <!-- Main layout -->
     <main id="app">
-        <!-- Hologram canvas container -->
-        <section id="hologram-container">
-            <canvas id="hologram-canvas"></canvas>
-        </section>
+        <!-- Left column: hologram + dashboard -->
+        <div id="left-column">
+            <!-- Hologram canvas container -->
+            <section id="hologram-container">
+                <canvas id="hologram-canvas"></canvas>
+            </section>
+
+            <!-- Status Dashboard -->
+            <section id="status-dashboard">
+                <h3 class="dashboard-title">Dashboard</h3>
+                <div class="dashboard-grid">
+                    <!-- Active Grids -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <span class="dash-icon">⚡</span>
+                            <span class="dash-label">Active Grids</span>
+                        </div>
+                        <div class="dash-card-body" id="dash-grids">
+                            <div class="dash-grid-row">
+                                <span class="dash-grid-name">DOT</span>
+                                <span class="dash-grid-value" id="dash-grid-dot">--</span>
+                            </div>
+                            <div class="dash-grid-row">
+                                <span class="dash-grid-name">SOL</span>
+                                <span class="dash-grid-value" id="dash-grid-sol">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Value -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <span class="dash-icon">💰</span>
+                            <span class="dash-label">Portfolio</span>
+                        </div>
+                        <div class="dash-card-body">
+                            <span class="dash-big-value" id="dash-portfolio">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Last Fill -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <span class="dash-icon">🔄</span>
+                            <span class="dash-label">Last Fill</span>
+                        </div>
+                        <div class="dash-card-body">
+                            <span class="dash-value" id="dash-last-fill">--</span>
+                        </div>
+                    </div>
+
+                    <!-- System Uptime -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <span class="dash-icon">🖥️</span>
+                            <span class="dash-label">System</span>
+                        </div>
+                        <div class="dash-card-body">
+                            <span class="dash-value" id="dash-uptime">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Brain Nodes -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <span class="dash-icon">🧠</span>
+                            <span class="dash-label">Brain</span>
+                        </div>
+                        <div class="dash-card-body">
+                            <span class="dash-value" id="dash-brain-nodes">--</span>
+                            <span class="dash-sub">nodes</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
         <!-- Chat panel -->
         <aside id="chat-panel">
