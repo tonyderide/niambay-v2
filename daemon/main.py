@@ -332,7 +332,7 @@ class NiamBayDaemon:
         self.config.save(str(config_path))
 
         # Apply live changes: LLM provider
-        if any(k in data for k in ("llm_provider", "llm_model", "llm_url", "llm_api_key", "groq_api_key", "gemini_api_key", "use_cascade")):
+        if any(k in data for k in ("llm_provider", "llm_model", "llm_url", "llm_api_key", "groq_api_key", "gemini_api_key", "mistral_api_key", "cerebras_api_key", "sambanova_api_key", "use_cascade")):
             try:
                 self.llm_provider = self._create_llm_provider()
                 logger.info("LLM provider reloaded: %s / %s", self.config.llm_provider, self.config.llm_model)

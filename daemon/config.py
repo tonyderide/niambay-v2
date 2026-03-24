@@ -16,6 +16,9 @@ class Config:
     llm_api_key: str = ""
     groq_api_key: str = ""
     gemini_api_key: str = ""
+    mistral_api_key: str = ""
+    cerebras_api_key: str = ""
+    sambanova_api_key: str = ""
     use_cascade: bool = True
     max_memory_mb: int = 50
     max_brain_nodes: int = 10000
